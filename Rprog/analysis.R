@@ -5,29 +5,30 @@ library(gdxrrw)
 library(stringr)
 library(gridExtra)
 library(patchwork)
+library(cowplot)
+library(lemon)
+library(purrr)
+library(rnaturalearthdata)
+library(rnaturalearth)
 
-
-setwd("C:/temp")
-
-# theme -------------------------------------------------------------------
 
 theme_1 <- theme_bw() +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        text = element_text(size = 18),
-        axis.text.x = element_text(angle = 45, size = 18, hjust = 1, vjust = 1),
+  theme(text = element_text(size = 16),
+        axis.text.x = element_text(angle = 45, size = 16, hjust = 1, vjust = 1),
         axis.title.x = element_blank(),
-        legend.position = "bottom", 
-        legend.title = element_blank(),
+        legend.position = "right", 
+        #legend.title = element_blank(),
         strip.background = element_blank())
+
+setwd("data")
 
 
 
 # file check ------------------------------------------------------------
 
 files <- list(
-#  list(file = "SSP2_BaU_NoCC_No.gdx", scenario = "排出制約なし"),
-  list(file = "SSP2_700C_2030CP_AMN_NoCC_No.gdx", scenario = "400C")
+  list(file = "SSP2_BaU_NoCC_No.gdx", scenario = "BaU"),
+  list(file = "SSP2_400C_2030CP_NoCC_No.gdx", scenario = "400C")
 )
 region <- "World"
 
@@ -56,18 +57,28 @@ for (file_info in files) {
 
 
 
-folder_path <- "../../Routput"
 name <- "GHG.png"
-full_path <- file.path(folder_path, name)
-ggsave(full_path, plot = g, width = 8, height = 5, dpi = 300)
 
+output_dir <- file.path("..", "output")
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+}
 
+ggsave(
+  filename = file.path(output_dir, name),
+  plot = g,
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
 # TRS_ENE_FL_load ---------------------------------------------------------
 
 
 files <- list(
     #list(file = "global_17_SSP2_700C_2030CP_AMN_new_NoCC_No.gdx", scenario = "700C_new"),
-  list(file = "global_17_SSP2_700C_2030CP_AMN_new_NoCC_No.gdx", scenario = "700C")
+  list(file = "global_17_SSP2_400C_2030CP_NoCC_No.gdx", scenario = "400C")
 )
 
 
@@ -97,18 +108,23 @@ g<-ggplot(df_FL, aes(x = i1, y = value, group = commodity, fill = commodity, col
 
 plot(g)
 
-folder_path <- "C:/temp/R/Ammonia"
 name <- "TRS_ENE_FL_load_NVFRIT_JPN.png"
-full_path <- file.path(folder_path, name)
-ggsave(full_path, plot = g)
 
-
+ggsave(
+  filename = file.path(output_dir, name),
+  plot = g,
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
 # Ammonia_IAMC ------------------------------------------------------------
 
 
 files <- list(
   #  list(file = "SSP2_BaU_NoCC_No.gdx", scenario = "排出制約なし"),
-  list(file = "SSP2_700C_2030CP_AMN_NoCC_No.gdx", scenario = "700C")
+  list(file = "SSP2_400C_2030CP_AMN_NoCC_No.gdx", scenario = "400C")
 )
 region <- "World"
 
@@ -142,7 +158,7 @@ for (file_info in files) {
 
 files <- list(
   #  list(file = "SSP2_BaU_NoCC_No.gdx", scenario = "排出制約なし"),
-  list(file = "global_17_SSP2_700C_2030CP_AMN_new_NoCC_No.gdx", scenario = "700C")
+  list(file = "global_17_SSP2_400C_2030CP_NoCC_No.gdx", scenario = "400C")
 )
 
 
@@ -187,12 +203,17 @@ g<-ggplot(df_FL, aes(x = i1, y = value, group = materials, fill = materials, col
 
 plot(g)
 
-folder_path <- "C:/temp/R/Ammonia"
 name <- "PSAM_value_JPN.png"
-full_path <- file.path(folder_path, name)
-ggsave(full_path, plot = g)
 
-
+ggsave(
+  filename = file.path(output_dir, name),
+  plot = g,
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
 # Sec_Ene -----------------------------------------------------------------
 
 df_FL <- data.frame()
@@ -252,12 +273,17 @@ plot(g)
 
 
 
-folder_path <- "C:/temp/R/Ammonia"
 name <- "Sec_Ene_World.png"
-full_path <- file.path(folder_path, name)
-ggsave(full_path, plot = g)
 
-
+ggsave(
+  filename = file.path(output_dir, name),
+  plot = g,
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
 # Fin_Ene -----------------------------------------------------------------
 
 df_FL <- data.frame()
@@ -289,12 +315,17 @@ plot(g)
 
 
 
-folder_path <- "C:/temp/R/Ammonia"
 name <- "Fin_Ene_World.png"
-full_path <- file.path(folder_path, name)
-ggsave(full_path, plot = g)
 
-
+ggsave(
+  filename = file.path(output_dir, name),
+  plot = g,
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
 # Inv_Ene_Sup_Amm -----------------------------------------------------------------
 
 df_FL <- data.frame()
@@ -327,13 +358,18 @@ plot(g)
 
 
 
-folder_path <- "C:/temp/R/Ammonia"
 name <- "Inv_Ene_World.png"
-full_path <- file.path(folder_path, name)
-ggsave(full_path, plot = g)
 
 
-
+ggsave(
+  filename = file.path(output_dir, name),
+  plot = g,
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
 
 
 # Prc -----------------------------------------------------------------
@@ -368,12 +404,17 @@ plot(g)
 
 
 
-folder_path <- "C:/temp/R/Ammonia"
 name <- "Prc_World.png"
-full_path <- file.path(folder_path, name)
-ggsave(full_path, plot = g)
 
-
+ggsave(
+  filename = file.path(output_dir, name),
+  plot = g,
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
 
 # Capacity -----------------------------------------------------------------
 
@@ -409,12 +450,17 @@ plot(g)
 
 
 
-folder_path <- "C:/temp/R/Ammonia"
 name <- "Cap_World.png"
-full_path <- file.path(folder_path, name)
-ggsave(full_path, plot = g)
 
-
+ggsave(
+  filename = file.path(output_dir, name),
+  plot = g,
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
 # Trade -----------------------------------------------------------------
 
 df_FL <- data.frame()
@@ -446,8 +492,14 @@ plot(g)
 
 
 
-folder_path <- "C:/temp/R/Ammonia"
 name <- "Trd_World.png"
-full_path <- file.path(folder_path, name)
-ggsave(full_path, plot = g)
 
+ggsave(
+  filename = file.path(output_dir, name),
+  plot = g,
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  bg = "white"
+)
