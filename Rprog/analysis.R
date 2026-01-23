@@ -23,56 +23,11 @@ theme_1 <- theme_bw() +
 setwd("data")
 
 
-
-# file check ------------------------------------------------------------
-
-files <- list(
-  list(file = "SSP2_BaU_NoCC_No.gdx", scenario = "BaU"),
-  list(file = "SSP2_400C_2030CP_NoCC_No.gdx", scenario = "400C")
-)
-region <- "World"
-
-
-df_Hyd <- data.frame()
-for (file_info in files) {
-  gdx_data <- rgdx.param(file_info$file, "IAMC_template")
-  df_temp <- gdx_data %>%
-    rename(Year = "Y")
-  df_Hyd <- rbind(df_Hyd, df_temp) %>% 
-    filter(REMF == region) %>%
-    filter(str_detect(VEMF, "Hyd")) %>% 
-    filter(Year == "2050")
-}
-
-df_Amm <- data.frame()
-for (file_info in files) {
-  gdx_data <- rgdx.param(file_info$file, "IAMC_template")
-  df_temp <- gdx_data %>%
-    rename(Year = "Y")
-  df_Amm <- rbind(df_Amm, df_temp) %>% 
-    filter(REMF == region) %>%
-    filter(str_detect(VEMF, "Amm")) %>% 
-    filter(Year == "2100")
-}
-
-
-
-name <- "GHG.png"
-
 output_dir <- file.path("..", "output")
 if (!dir.exists(output_dir)) {
   dir.create(output_dir)
 }
 
-ggsave(
-  filename = file.path(output_dir, name),
-  plot = g,
-  width = 12,
-  height = 6.5,
-  units = "in",
-  dpi = 300,
-  bg = "white"
-)
 # TRS_ENE_FL_load ---------------------------------------------------------
 
 
@@ -119,38 +74,6 @@ ggsave(
   dpi = 300,
   bg = "white"
 )
-# Ammonia_IAMC ------------------------------------------------------------
-
-
-files <- list(
-  #  list(file = "SSP2_BaU_NoCC_No.gdx", scenario = "排出制約なし"),
-  list(file = "SSP2_400C_2030CP_AMN_NoCC_No.gdx", scenario = "400C")
-)
-region <- "World"
-
-
-df_Hyd <- data.frame()
-for (file_info in files) {
-  gdx_data <- rgdx.param(file_info$file, "IAMC_template")
-  df_temp <- gdx_data %>%
-    rename(Year = "Y")
-  df_Hyd <- rbind(df_Hyd, df_temp) %>% 
-    filter(REMF == region) %>%
-    filter(str_detect(VEMF, "Fin_Ene")) %>% 
-    filter(Year == "2050")
-}
-
-df_Amm <- data.frame()
-for (file_info in files) {
-  gdx_data <- rgdx.param(file_info$file, "IAMC_template")
-  df_temp <- gdx_data %>%
-    rename(Year = "Y")
-  df_Amm <- rbind(df_Amm, df_temp) %>% 
-    filter(REMF == region) %>%
-    filter(str_detect(VEMF, "Amm")) %>% 
-    filter(Year == "2100")
-}
-
 
 
 # PSAM_value---------------------------------------------------------
@@ -214,66 +137,101 @@ ggsave(
   dpi = 300,
   bg = "white"
 )
+# Variable check ------------------------------------------------------------
+
+
+
+df_Hyd <- data.frame()
+for (file_info in files) {
+  gdx_data <- rgdx.param(file_info$file, "IAMC_template")
+  df_temp <- gdx_data %>%
+    rename(Year = "Y")
+  df_Hyd <- rbind(df_Hyd, df_temp) %>% 
+    filter(REMF == region) %>%
+    filter(str_detect(VEMF, "Hyd")) %>% 
+    filter(Year == "2050")
+}
+
+df_Amm <- data.frame()
+for (file_info in files) {
+  gdx_data <- rgdx.param(file_info$file, "IAMC_template")
+  df_temp <- gdx_data %>%
+    rename(Year = "Y")
+  df_Amm <- rbind(df_Amm, df_temp) %>% 
+    filter(REMF == region) %>%
+    filter(str_detect(VEMF, "Amm")) %>% 
+    filter(Year == "2100")
+}
+
+
+# file load ---------------------------------------------------------------
+
+
+files <- list(
+  list(file = "SSP2_BaU_NoCC_No.gdx", scenario = "BaU"),
+  list(file = "SSP2_400C_2030CP_NoCC_No.gdx", scenario = "400C")
+)
+region <- "World"
+
+
 # Sec_Ene -----------------------------------------------------------------
 
-df_FL <- data.frame()
 
-gdx_data <- rgdx.param(file_info$file, "IAMC_template")
-df_temp <- gdx_data %>%
-  filter(REMF == "World") %>%
-  filter(VEMF %in% c(
+fuel <- "Amm"   # "Hyd" or "Amm"
+
+
+if (fuel == "Hyd") {
+  VEMF_list <- c(
     "Sec_Ene_Hyd_Bio_w_CCS",
     "Sec_Ene_Hyd_Bio_wo_CCS",
     "Sec_Ene_Hyd_Ele",
     "Sec_Ene_Hyd_Gas_wo_CCS"
-  ))
-
-# 積み上げ順を指定（Gas → Bio → Ele）
-df_temp$VEMF <- factor(
-  df_temp$VEMF,
-  levels = c(
-    "Sec_Ene_Hyd_Gas_wo_CCS",
-    "Sec_Ene_Hyd_Bio_w_CCS",
-    "Sec_Ene_Hyd_Bio_wo_CCS",
-    "Sec_Ene_Hyd_Ele"
   )
-)
+  
+} else if (fuel == "Amm") {
+  VEMF_list <- c(
+    "Sec_Ene_Amm_Bio_w_CCS",
+    "Sec_Ene_Amm_Bio_wo_CCS",
+    "Sec_Ene_Amm_Ele",
+    "Sec_Ene_Amm_Gas_wo_CCS"
+  )
+  
+}
 
-df_FL <- rbind(df_FL, df_temp)
+df_FL <- data.frame()
 
-g <- ggplot(df_FL, aes(x = Y, y = IAMC_template, group = VEMF, fill = VEMF, color = VEMF)) +
-  geom_area(alpha = 1, position = "stack") +
+for (file_info in files) {
+  
+  gdx_data <- rgdx.param(file_info$file, "IAMC_template")
+  
+  df_temp <- gdx_data %>%
+    filter(REMF == region) %>%
+    filter(VEMF %in% VEMF_list) %>%
+    mutate(Scenario = file_info$scenario) 
+  
+  df_FL <- rbind(df_FL, df_temp)
+}
+
+df_FL$Y <- as.numeric(as.character(df_FL$Y))
+
+g <- ggplot(
+  df_FL,
+  aes(x = Y, y = IAMC_template, fill = VEMF, color = VEMF)
+) +
+  geom_area(position = "stack") +
   labs(
     title = "Secondary Energy",
     x = "Year",
     y = "Secondary Energy (EJ)"
   ) +
-  theme_minimal() +
-  scale_x_discrete(
-    breaks = c("2030", "2040", "2050", "2060", "2070", "2080", "2090", "2100")
-  )+
-  scale_fill_manual(
-    values = c(
-      "Sec_Ene_Hyd_Bio_w_CCS" = "green",
-      "Sec_Ene_Hyd_Bio_wo_CCS" = "#1b9e77",
-      "Sec_Ene_Hyd_Gas_wo_CCS" = "#d95f02",
-      "Sec_Ene_Hyd_Ele" = "#7570b3"
-    )
-  ) +
-  scale_color_manual(
-    values = c(
-      "Sec_Ene_Hyd_Bio_w_CCS" = "green",
-      "Sec_Ene_Hyd_Bio_wo_CCS" = "#1b9e77",
-      "Sec_Ene_Hyd_Gas_wo_CCS" = "#d95f02",
-      "Sec_Ene_Hyd_Ele" = "#7570b3"
-    )
+  facet_wrap(~ Scenario, ncol = 1) +
+  scale_x_continuous(
+    breaks = c(2030, 2040, 2050, 2060, 2070, 2080, 2090, 2100)
   )
 
 plot(g)
 
-
-
-name <- "Sec_Ene_World.png"
+name <- "Sec_Ene_Amm.png"
 
 ggsave(
   filename = file.path(output_dir, name),
@@ -284,6 +242,7 @@ ggsave(
   dpi = 300,
   bg = "white"
 )
+
 # Fin_Ene -----------------------------------------------------------------
 
 df_FL <- data.frame()
@@ -326,36 +285,57 @@ ggsave(
   dpi = 300,
   bg = "white"
 )
+
+
+
 # Inv_Ene_Sup_Amm -----------------------------------------------------------------
+
+
+fuel <- "Hyd"   # "Hyd" or "Amm"
+
+if (fuel == "Hyd") {
+  VEMF_list <- c(
+    "Inv_Ene_Sup_Hyd_Gas",
+    "Inv_Ene_Sup_Hyd_Ele",
+    "Inv_Ene_Sup_Hyd_Bio"
+  )
+} else if (fuel == "Amm") {
+  VEMF_list <- c(
+    "Inv_Ene_Sup_Amm_Gas",
+    "Inv_Ene_Sup_Amm_Ele",
+    "Inv_Ene_Sup_Amm_Bio"
+  )
+}
 
 df_FL <- data.frame()
 
 gdx_data <- rgdx.param(file_info$file, "IAMC_template")
+
 df_temp <- gdx_data %>%
   filter(REMF == "World") %>%
-  filter(VEMF %in% c(
-    "Inv_Ene_Sup_Amm_Gas",
-    "Inv_Ene_Sup_Amm_Ele",
-    "Inv_Ene_Sup_Amm_Bio"
-  ))
-
+  filter(VEMF %in% VEMF_list)
 
 df_FL <- rbind(df_FL, df_temp)
 
-g <- ggplot(df_FL, aes(x = Y, y = IAMC_template, group = VEMF, color = VEMF)) +
+
+df_FL$Y <- as.numeric(as.character(df_FL$Y))
+
+g <- ggplot(
+  df_FL,
+  aes(x = Y, y = IAMC_template, color = VEMF)
+) +
   geom_line(linewidth = 1) +
   labs(
-    title = "Investment",
+    title = paste("Investment –", fuel),
     x = "Year",
     y = "Investments (billion US$2010)"
   ) +
   theme_minimal() +
-  scale_x_discrete(
-    breaks = c("2030", "2040", "2050", "2060", "2070", "2080", "2090", "2100")
+  scale_x_continuous(
+    breaks = c(2030, 2040, 2050, 2060, 2070, 2080, 2090, 2100)
   )
 
 plot(g)
-
 
 
 name <- "Inv_Ene_World.png"
@@ -373,35 +353,50 @@ ggsave(
 
 
 # Prc -----------------------------------------------------------------
+fuel <- "Amm"
+
+if (fuel == "Hyd") {
+  VEMF_list <- c(
+    "Prc_Sec_Ene_Hyd",
+    "Prc_Fin_Ene_Tra_Hyd",
+    "Prc_Fin_Ene_Hyd"
+  )
+} else if (fuel == "Amm") {
+  VEMF_list <- c(
+    "Prc_Sec_Ene_Amm",
+    "Prc_Fin_Ene_Tra_Amm",
+    "Prc_Fin_Ene_Amm"
+  )
+}
 
 df_FL <- data.frame()
 
 gdx_data <- rgdx.param(file_info$file, "IAMC_template")
+
 df_temp <- gdx_data %>%
   filter(REMF == "World") %>%
-  filter(VEMF %in% c(
-    "Prc_Sec_Ene_Amm",
-    "Prc_Fin_Ene_Tra_Amm",
-    "Prc_Fin_Ene_Amm"
-  ))
-
+  filter(VEMF %in% VEMF_list)
 
 df_FL <- rbind(df_FL, df_temp)
 
-g <- ggplot(df_FL, aes(x = Y, y = IAMC_template, group = VEMF, color = VEMF)) +
+df_FL$Y <- as.numeric(as.character(df_FL$Y))
+
+g <- ggplot(
+  df_FL,
+  aes(x = Y, y = IAMC_template, color = VEMF)
+) +
   geom_line(linewidth = 1) +
   labs(
-    title = "Price",
+    title = paste("Price –", fuel),
     x = "Year",
     y = "Price (US$2010/GJ)"
   ) +
   theme_minimal() +
-  scale_x_discrete(
-    breaks = c("2030", "2040", "2050", "2060", "2070", "2080", "2090", "2100")
+  scale_x_continuous(
+    breaks = c(2030, 2040, 2050, 2060, 2070, 2080, 2090, 2100)
   )
 
 plot(g)
-
 
 
 name <- "Prc_World.png"
@@ -418,36 +413,54 @@ ggsave(
 
 # Capacity -----------------------------------------------------------------
 
-df_FL <- data.frame()
+fuel <- "Hyd"
 
-gdx_data <- rgdx.param(file_info$file, "IAMC_template")
-df_temp <- gdx_data %>%
-  filter(REMF == "World") %>%
-  filter(VEMF %in% c(
+if (fuel == "Hyd") {
+  VEMF_list <- c(
+    "Cap_Hyd_Bio_w_CCS",
+    "Cap_Hyd_Bio_wo_CCS",
+    "Cap_Hyd_Ele",
+    "Cap_Hyd_Gas_w_CCS",
+    "Cap_Hyd_Gas_wo_CCS"
+  )
+} else if (fuel == "Amm") {
+  VEMF_list <- c(
     "Cap_Amm_Bio_w_CCS",
     "Cap_Amm_Bio_wo_CCS",
     "Cap_Amm_Ele",
     "Cap_Amm_Gas_w_CCS",
     "Cap_Amm_Gas_wo_CCS"
-  ))
+  )
+}
 
+df_FL <- data.frame()
+
+gdx_data <- rgdx.param(file_info$file, "IAMC_template")
+
+df_temp <- gdx_data %>%
+  filter(REMF == "World") %>%
+  filter(VEMF %in% VEMF_list)
 
 df_FL <- rbind(df_FL, df_temp)
 
-g <- ggplot(df_FL, aes(x = Y, y = IAMC_template, group = VEMF, color = VEMF)) +
+df_FL$Y <- as.numeric(as.character(df_FL$Y))
+
+g <- ggplot(
+  df_FL,
+  aes(x = Y, y = IAMC_template, color = VEMF)
+) +
   geom_line(linewidth = 1) +
   labs(
-    title = "Total available capacity of Ammonia plants",
+    title = paste("Total available capacity of", fuel, "plants"),
     x = "Year",
-    y = "Capacity(GW) "
+    y = "Capacity (GW)"
   ) +
   theme_minimal() +
-  scale_x_discrete(
-    breaks = c("2030", "2040", "2050", "2060", "2070", "2080", "2090", "2100")
+  scale_x_continuous(
+    breaks = c(2030, 2040, 2050, 2060, 2070, 2080, 2090, 2100)
   )
 
 plot(g)
-
 
 
 name <- "Cap_World.png"
@@ -462,30 +475,45 @@ ggsave(
   bg = "white"
 )
 # Trade -----------------------------------------------------------------
+fuel <- "Amm"
+
+if (fuel == "Hyd") {
+  VEMF_list <- c(
+    "Trd_Sec_Ene_Imp_Hyd_Vol",
+    "Trd_Sec_Ene_Exp_Hyd_Vol"
+  )
+} else if (fuel == "Amm") {
+  VEMF_list <- c(
+    "Trd_Sec_Ene_Imp_Amm_Vol",
+    "Trd_Sec_Ene_Exp_Amm_Vol"
+  )
+}
 
 df_FL <- data.frame()
 
 gdx_data <- rgdx.param(file_info$file, "IAMC_template")
+
 df_temp <- gdx_data %>%
   filter(REMF == "World") %>%
-  filter(VEMF %in% c(
-    "Trd_Sec_Ene_Imp_Amm_Vol",
-    "Trd_Sec_Ene_Exp_Amm_Vol"
-  ))
-
+  filter(VEMF %in% VEMF_list)
 
 df_FL <- rbind(df_FL, df_temp)
 
-g <- ggplot(df_FL, aes(x = Y, y = IAMC_template, group = VEMF, color = VEMF)) +
+df_FL$Y <- as.numeric(as.character(df_FL$Y))
+
+g <- ggplot(
+  df_FL,
+  aes(x = Y, y = IAMC_template, color = VEMF)
+) +
   geom_line(linewidth = 1) +
   labs(
-    title = "Trade",
+    title = paste("Trade –", fuel),
     x = "Year",
     y = "Import and Export volume (EJ)"
   ) +
   theme_minimal() +
-  scale_x_discrete(
-    breaks = c("2030", "2040", "2050", "2060", "2070", "2080", "2090", "2100")
+  scale_x_continuous(
+    breaks = c(2030, 2040, 2050, 2060, 2070, 2080, 2090, 2100)
   )
 
 plot(g)
